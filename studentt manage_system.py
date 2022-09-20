@@ -63,6 +63,7 @@ class Student:
 
     #check valid contact no
     def validateContact(self,contact):
+        contact=str(contact)
         ptr=r"[6-9]\d{9}" 
         x=re.findall(ptr,contact)
         if len(x) > 0:
@@ -114,14 +115,15 @@ class Student:
             self.connection()
 
             try:
-                data = (name,email,contact,passwd)
+                data = (name,contact,email,passwd)
                 query = '''insert into  registerstudent(Name,contact,email,password) values(%s,%s,%s,%s);'''
 
                 self.cur.execute(query,data)
 
                 self.cur.execute("commit;")
                 self.mydb.close()
-            except:
+            except Exception as e:
+                print(e)
                 self.mydb.close()
                 return 'Email or contact Already Exists....'
             return f"Student {name} is Successfully Registered"    
@@ -129,18 +131,13 @@ class Student:
 
 
             
-        
-        
-
-
-
 
 #application start from here
 app=Student()
 print(" STUDENT MANAGEMENT SYSTEM ".center(star, '*'))
 
 while True: 
-    print('1-Admin login\n2-Student Login\n3-Exit ') 
+    print('1-Admin login\n2-Student Corner\n3-Exit ') 
     ch=int(input('Enter your Choice:')) 
 
 
@@ -210,21 +207,6 @@ while True:
             
                               
 
-
-
-       
-
-
-        
-
-
-
-
-
-
-
-
-
     #choice @2student section
     elif ch == 2:
         print('Student Section'.center(star,"*"))
@@ -234,7 +216,8 @@ while True:
             print('1-Register Student\n2-Student Login\n3-Exit') 
 
             stuch=int(input('Enter your Choice:')) 
-
+            
+            #student Choice @1 Register Student
             if stuch == 1:
                 print(' Register Student Section '.center(star,"*"))
 
@@ -251,15 +234,7 @@ while True:
 
 
 
-
-
-
-
-
-
-
-
-
+            #student Choice @2 Student Login
             elif stuch == 2:
                 print(' Student Login '.center(star,"*"))
 
@@ -304,11 +279,12 @@ while True:
 
 
 
-
+            #student Choice @3 Exit
             elif stuch == 3:
                 print(' Exiting Student Section'.center(star,"*"))
                 break
 
+            #student Choice @ Invalid option
             else:
                 print(' Invalid Choice '.center(star,"*"))
 
@@ -327,10 +303,3 @@ while True:
         print(' Invalid Choice '.center(star,"*"))
         
         
-
-   
-
-    
-
-
- 
