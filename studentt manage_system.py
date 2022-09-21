@@ -1,6 +1,6 @@
 #Student management system with database
-#asdfgghjk
 star=100
+from email.mime import application
 import re
 import mysql.connector as db
 
@@ -15,17 +15,27 @@ class Student:
         # create table for 
         mydb = db.connect(host = 'localhost', user = 'root' , passwd = 'root', database = 'StudentManagement')
         cur = mydb.cursor()
-        query = '''create table if not exists RegisterStudent(id int primary key auto_increment,Name varchar(100) not null,
-        contact bigint not null,email varchar(100) unique not null,password varchar(100));'''
+        query = '''create table if not exists RegisterStudent(
+        id int primary key auto_increment,
+        Name varchar(100) not null,
+        contact bigint not null,
+        email varchar(100) unique not null,
+        password varchar(100));'''
         cur.execute(query)
 
 
-        query = '''create table if not exists Student(id int primary key auto_increment,Name varchar(100) not null,
-        contact bigint not null,email varchar(100) unique not null,password varchar(100));'''
+        query = '''create table if not exists SApplication(
+        id int primary key auto_increment,
+        Name varchar(100) not null,
+        Course varchar(100) not null,
+        email varchar(100) unique not null,
+        Percentage int not null,
+        Last_college_name varchar(100) not null,
+        Application_status varchar(20));'''
         cur.execute(query) 
 
 
-        query = '''create table if not exists SApplication(id int primary key auto_increment,Name varchar(100) not null,
+        query = '''create table if not exists Student(id int primary key auto_increment,Name varchar(100) not null,
         contact bigint not null,email varchar(100) unique not null,password varchar(100));'''
         cur.execute(query)
 
@@ -104,13 +114,12 @@ class Student:
                               
         
 
-        if len(passwd)>=8:
-            if passwd == confirm_pass :
-                self.password_flag = True
-            else:
-                return "Password MisMatch Plz try again"
+        
+        if passwd == confirm_pass :
+            self.password_flag = True
         else:
-            return "Password should be greater than or equal to 8 characters"
+            return "Password MisMatch Plz try again"
+        
 
 
         if self.userName_flag == True and self.userContact_flag == True and self.userEmail_flag == True and self.password_flag == True:
@@ -128,7 +137,44 @@ class Student:
                 print(e)
                 self.mydb.close()
                 return 'Email or contact Already Exists....'
-            return f"Student {name} is Successfully Registered"    
+            return f"Student {name} is Successfully Registered" 
+
+    def StudentLogin(self,StudentEmailId,StudentPwd): 
+        self.connection()
+        data=(StudentEmailId,)
+        query='''select password from registerstudent where email=%s; '''
+        self.cur.execute(query,data)
+
+        res=self.cur.fetchone()
+        #print(res)
+        if res==None:
+            return 'Email does not exist please register First..'
+        elif res[0] == StudentPwd:      
+            return True
+        else:
+            return 'Password is incorrect.'            
+
+
+    def SubmitApplication(self,Name,Course,Email,Percentage,Last_college):
+        self.connection()
+        data=(Email,)
+        query='''select Name from sapplication where email=%s; '''
+        self.cur.execute(query,data)
+
+        res=self.cur.fetchone()
+        #print(res)
+        if res==None:
+            data=(Name,Course,Email,Percentage,Last_college,"Pending")
+            query='''insert into sapplication values(%s,%s,%s,%s,%s,%s)'''
+            self.cur.execute(query,data)
+            return 'Application submitted Successfully..'
+        else:
+            return f'This Email is already registered with name {res}'    
+
+
+
+
+
 
 
 
@@ -250,15 +296,29 @@ while True:
 
 
 
-                #student choice After Login
-                while True:
-            
-                    print('1-Submit Application\n2-View Applications status\n3-Logout') 
+                    #student choice After Login
+                    while True:
+                
+                        print('1-Submit Application\n2-View Applications status\n3-Logout') 
 
-                    log_st_ch=int(input('Enter your Choice:'))  
+                        log_st_ch=int(input('Enter your Choice:'))  
 
-                    if log_st_ch == 1:
-                        print(' Submit Application Section '.center(star,"*"))
+                        if log_st_ch == 1:
+                            print(' Submit Application Section '.center(star,"*"))
+                            Name=input("Enter your name:").strip()
+
+                            Course=input("Enter your Course Appying for:").strip()
+                            Email=input("Enter your Email:").strip()
+                            Percentage=int(input("Enter your Percentage:").strip())
+                            Last_college=input("Enter your Last Attended College Name:").strip()
+
+                            Submit_Status=app.SubmitApplication(Name,Course,Email,Percentage,Last_college)
+
+                            if Submit_Status==True:
+                                print(' Application Submited Successfully..'.center(star,"*"))
+
+                            else:
+                                print(f' {Submit_Status} '.center(star,"*"))    
 
 
 
@@ -266,15 +326,24 @@ while True:
 
 
 
-                    elif log_st_ch == 2:
-                        print(' Applications status '.center(star,"*"))
 
-                    elif log_st_ch == 3:
-                        print(' logout '.center(star,"*")) 
-                        break
 
-                    else :
-                        print(' Invalid choice '.center(star,"*"))        
+
+
+
+                        elif log_st_ch == 2:
+                            print(' Applications status '.center(star,"*"))
+
+                        elif log_st_ch == 3:
+                            print(' logout '.center(star,"*")) 
+                            break
+
+                        else :
+                            print(' Invalid choice '.center(star,"*"))        
+
+                else:
+                    print(f' {LoginStatus} '.center(star,"*"))        
+
 
                     
                     
