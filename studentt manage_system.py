@@ -28,7 +28,7 @@ class Student:
         id int primary key auto_increment,
         Name varchar(100) not null,
         Course varchar(100) not null,
-        email varchar(100) unique not null,
+        email varchar(100) unique not null, 
         Percentage int not null,
         Last_college_name varchar(100) not null,
         Application_status varchar(20));'''
@@ -140,36 +140,73 @@ class Student:
             return f"Student {name} is Successfully Registered" 
 
     def StudentLogin(self,StudentEmailId,StudentPwd): 
-        self.connection()
-        data=(StudentEmailId,)
-        query='''select password from registerstudent where email=%s; '''
-        self.cur.execute(query,data)
+        try:
+            self.connection()
+            data=(StudentEmailId,)
+            query='''select password from registerstudent where email=%s; '''
+            self.cur.execute(query,data)
 
-        res=self.cur.fetchone()
-        #print(res)
-        if res==None:
-            return 'Email does not exist please register First..'
-        elif res[0] == StudentPwd:      
-            return True
-        else:
-            return 'Password is incorrect.'            
+            res=self.cur.fetchone()
+            #print(res)
+            if res==None:
+                return 'Email does not exist please register First..'
+            elif res[0] == StudentPwd:      
+                return True
+            else:
+                return 'Password is incorrect.'            
 
+        except Exception as e:
+            print(e)
+        finally:
+            self.cur.execute("commit;")
+            self.mydb.close()    
 
     def SubmitApplication(self,Name,Course,Email,Percentage,Last_college):
-        self.connection()
-        data=(Email,)
-        query='''select Name from sapplication where email=%s; '''
-        self.cur.execute(query,data)
-
-        res=self.cur.fetchone()
-        #print(res)
-        if res==None:
-            data=(Name,Course,Email,Percentage,Last_college,"Pending")
-            query='''insert into sapplication values(%s,%s,%s,%s,%s,%s)'''
+        try:
+            self.connection()
+            data=(Email,)
+            query='''select Name from sapplication where email=%s; '''
             self.cur.execute(query,data)
-            return 'Application submitted Successfully..'
-        else:
-            return f'This Email is already registered with name {res}'    
+
+            res=self.cur.fetchone()
+            print(res)
+            if res==None:
+                
+                data=(Name,Course,Email,Percentage,Last_college,"Pending")
+                query='''insert into sapplication(Name,Course,email,Percentage,Last_college_name,Application_status) values(%s,%s,%s,%s,%s,%s)'''
+                self.cur.execute(query,data)
+                return 'Application submitted Successfully..'
+            else:
+                return f'This Email is already registered with name {res}'    
+
+        except Exception as e:
+            print(e)
+        finally:
+            self.cur.execute("commit;")
+            self.mydb.close()    
+
+    def ViewApplication(self,email):
+        try:
+            self.connection()
+            data=(email,)
+            query='''select * from sapplication where email=%s; '''
+            self.cur.execute(query,data)
+
+            res=self.cur.fetchone()
+            #print(res)
+            if res==None:
+                return f'No application has been submitted for this {email}'
+                
+                
+            else:
+                return f'Name:{res[1]}\nCourse:{res[2]}\nEmail:{res[3]}\nPecentage:{res[4]}\nLast college name:{res[5]}\nApplication_status:{res[6]}\n'
+  
+
+        except Exception as e:
+            print(e)
+        finally:
+            self.cur.execute("commit;")
+            self.mydb.close()    
 
 
 
@@ -333,6 +370,13 @@ while True:
 
                         elif log_st_ch == 2:
                             print(' Applications status '.center(star,"*"))
+
+                            email=input("Enter your Email filled in application form :")
+                            viewStatus=app.ViewApplication(email)
+
+                            print(f' {viewStatus} '.center(star,"*"))
+
+
 
                         elif log_st_ch == 3:
                             print(' logout '.center(star,"*")) 
