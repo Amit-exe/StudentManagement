@@ -3,6 +3,7 @@ star=100
 from email.mime import application
 import re
 import mysql.connector as db
+from prettytable import PrettyTable
 
 
 class Student:
@@ -35,8 +36,12 @@ class Student:
         cur.execute(query) 
 
 
-        query = '''create table if not exists Student(id int primary key auto_increment,Name varchar(100) not null,
-        contact bigint not null,email varchar(100) unique not null,password varchar(100));'''
+        query = '''create table if not exists Student(
+            rollno int primary key auto_increment,
+            Name varchar(100) not null,
+            course varchar(100) not null,
+            email varchar(100) unique not null,
+            academic_year varchar(100));'''
         cur.execute(query)
 
 
@@ -47,6 +52,10 @@ class Student:
     def connection(self):
         self.mydb = db.connect(host = 'localhost', user = 'root' , passwd = 'root', database = 'StudentManagement')
         self.cur = self.mydb.cursor()
+
+
+#------------------------------------------------------------------Admin Section--------------------------------------------------------
+
 
     def AdminLogin(self,adminid,adminpasswd):
         if self.__adminid == adminid:
@@ -59,6 +68,90 @@ class Student:
                 
         else:
             return ' Invalid Id ' 
+
+
+    def addNewStudent(self,Sname,Scourse,Semail,Syear):
+        try:
+            self.connection()
+            data=(Semail,)
+            query='''select Name from student where email=%s; '''
+            self.cur.execute(query,data)
+
+            res=self.cur.fetchone()
+            print(res)
+            if res==None:
+                
+                data=(Sname,Scourse,Semail,Syear)
+                query='''insert into student(Name,course,email,academic_year) values(%s,%s,%s,%s)'''
+                self.cur.execute(query,data)
+                return 'Student Added Successfully..'
+            else:
+                return f'This email is already enrolled with name {res[0]}'    
+
+        except Exception as e:
+            print(e)
+        finally:
+            self.cur.execute("commit;")
+            self.mydb.close()    
+
+    def showPendingApplication(self):
+        try:
+            self.connection()
+            query='''select * from sapplication;'''
+            self.cur.execute(query)
+
+            res=self.cur.fetchall()
+            t = PrettyTable(['Application ID','Name', 'Course','Email', 'Pecentage' ,'Last college name' , 'Application_status'])
+            for app in res:
+                if app[6]=='pending':
+                    t.add_row([app[0],app[1] ,app[2],app[3],app[4],app[5],app[6]])
+
+            
+            print(t)
+            #print(res)
+            if res==None:
+                print('No Pending Applications as of Now')
+
+        except Exception as e:
+            print(e)
+        finally:
+            self.cur.execute("commit;")
+            self.mydb.close()
+
+    def addStudentFromPending(self,studentToAdd,AcademicYear):
+        try:
+            self.connection()
+            data=(studentToAdd,)
+            query='''select * from sapplication where id=%s; '''
+            self.cur.execute(query,data)
+
+            res=self.cur.fetchone()
+            # print(res)
+            if res==None:
+                return f'This Application Id doesn\'t exist'
+            else:
+                if res[6]=='confirmed':
+                    return 'This Application Id is already Confirmed'
+                else:
+                    self.addNewStudent(res[1],res[2],res[3],AcademicYear)
+                    self.connection()
+                    data=(studentToAdd,)
+                    query='''update sapplication set Application_status='confirmed' where id=%s; '''
+                    self.cur.execute(query,data)
+                    return 'Student  Enrolled Successfully..'
+                    
+        except Exception as e:
+            print(e)
+        finally:
+            self.cur.execute("commit;")
+            self.mydb.close()   
+        
+
+
+
+
+#------------------------------------------------------------------Validation Functions--------------------------------------------------------
+
 
 
     def validateUsername(self,name):
@@ -93,13 +186,13 @@ class Student:
         else:
             return False   
 
+#------------------------------------------------------------------Student Section--------------------------------------------------------
 
     #Register Student function
     def StudentRegister(self,name,contact,email,passwd,confirm_pass):
         self.userName_flag = self.validateUsername(name)
         if not self.userName_flag:
             return "Username is not valid try only with alphabets"
-
         
         self.userContact_flag = self.validateContact(contact)
         if not self.userContact_flag:
@@ -109,19 +202,12 @@ class Student:
         self.userEmail_flag = self.validateEmail(email)
         if not self.userEmail_flag:
             return "Email Id is not valid" 
-
-                              
-                              
-        
-
-        
+      
         if passwd == confirm_pass :
             self.password_flag = True
         else:
             return "Password MisMatch Plz try again"
         
-
-
         if self.userName_flag == True and self.userContact_flag == True and self.userEmail_flag == True and self.password_flag == True:
             self.connection()
 
@@ -177,7 +263,7 @@ class Student:
                 self.cur.execute(query,data)
                 return 'Application submitted Successfully..'
             else:
-                return f'This Email is already registered with name {res}'    
+                return f'This Email is already registered with name {res[0]}'    
 
         except Exception as e:
             print(e)
@@ -209,16 +295,12 @@ class Student:
             self.mydb.close()    
 
 
-
-
-
-
-
-
             
+#------------------------------------------------------------------application start from here--------------------------------------------------------
 
-#application start from here
+
 app=Student()
+
 print(" STUDENT MANAGEMENT SYSTEM ".center(star, '*'))
 
 while True: 
@@ -246,6 +328,46 @@ while True:
 
                 if Adch == 1:
                     print(' Add Student Section '.center(star,"*"))
+                    while True:
+                        print('1-Add Student from submitted Application\n2-Enroll and Add new student\n3-Exit')
+                        addStudentCh=int(input('Enter your choice:'))
+
+
+                        if addStudentCh ==1:
+                            print(' Add Student From Submitted Applications'.center(star,"*"))
+                            print()
+                            app.showPendingApplication()
+                            studentToAdd = input('Enter Application Id of student you want to add:')
+                            Syear=input('Enter the academic year in format YYYY-YY:')
+                            addStudentStatus=app.addStudentFromPending(studentToAdd,Syear)
+                            if addStudentStatus == True:
+                                print(' Student Added Sucessfully '.center(star,"*"))
+                            else:
+                                print(f' {addStudentStatus} '.center(star,"*"))
+
+
+                        elif addStudentCh==2:
+                            Sname=input('Enter Student Name:')
+                            Scourse=input('Enter student Course:')
+                            Semail=input('Enter Student Email:')
+                            Syear=input('Enter the academic year in format YYYY-YY:')
+
+                            addNewStudentStatus=app.addNewStudent(Sname,Scourse,Semail,Syear)
+
+                            if addNewStudentStatus==True:
+                                print(' Student Added Sucessfully '.center(star,"*"))
+                            else:
+                                print(f' {addNewStudentStatus} '.center(star,"*"))
+
+
+                        elif addStudentCh==3:
+                            print(' Exiting Add student section '.center(star,'*'))
+                            break
+                        else:
+                            print(' Invalid Choice '.center(star,'*'))
+
+
+
 
 
 
