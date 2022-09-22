@@ -115,6 +115,7 @@ class Student:
             #print(res)
             if no_of_pending_app==0:
                 print('No Pending Applications as of Now\n')
+                return True
             else:
                 print(t)    
 
@@ -306,7 +307,7 @@ class Student:
             self.cur.execute(query,data)
 
             res=self.cur.fetchone()
-            print(res)
+            #print(res)
             if res==None:
                 
                 data=(Name,Course,Email,Percentage,Last_college,"Pending")
@@ -387,14 +388,16 @@ while True:
                         if addStudentCh ==1:
                             print(' Add Student From Submitted Applications'.center(star,"*"))
                             print()
-                            app.showPendingApplication()
-                            studentToAdd = input('Enter Application Id of student you want to add:')
-                            Syear=input('Enter the academic year in format YYYY-YY:')
-                            addStudentStatus=app.addStudentFromPending(studentToAdd,Syear)
-                            if addStudentStatus == True:
-                                print(' Student Added Sucessfully '.center(star,"*"))
-                            else:
-                                print(f' {addStudentStatus} '.center(star,"*"))
+
+                            pendingAppStatus=app.showPendingApplication()
+                            if  pendingAppStatus!=True:
+                                studentToAdd = input('Enter Application Id of student you want to add:')
+                                Syear=input('Enter the academic year in format YYYY-YY:')
+                                addStudentStatus=app.addStudentFromPending(studentToAdd,Syear)
+                                if addStudentStatus == True:
+                                    print(' Student Added Sucessfully '.center(star,"*"))
+                                else:
+                                    print(f' {addStudentStatus} '.center(star,"*"))
 
 
                         elif addStudentCh==2:
