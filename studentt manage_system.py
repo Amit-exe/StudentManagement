@@ -78,7 +78,7 @@ class Student:
             self.cur.execute(query,data)
 
             res=self.cur.fetchone()
-            print(res)
+            #print(res)
             if res==None:
                 
                 data=(Sname,Scourse,Semail,Syear)
@@ -102,15 +102,21 @@ class Student:
 
             res=self.cur.fetchall()
             t = PrettyTable(['Application ID','Name', 'Course','Email', 'Pecentage' ,'Last college name' , 'Application_status'])
+            no_of_pending_app=0
             for app in res:
-                if app[6]=='pending':
+
+                if app[6].lower()=='pending':
+                    no_of_pending_app+=1
+
                     t.add_row([app[0],app[1] ,app[2],app[3],app[4],app[5],app[6]])
 
             
-            print(t)
+            
             #print(res)
-            if res==None:
-                print('No Pending Applications as of Now')
+            if no_of_pending_app==0:
+                print('No Pending Applications as of Now\n')
+            else:
+                print(t)    
 
         except Exception as e:
             print(e)
@@ -145,7 +151,52 @@ class Student:
         finally:
             self.cur.execute("commit;")
             self.mydb.close()   
+
+    def listStudent(self):
+        try:
+            self.connection()
+            query='''select * from student;'''
+            self.cur.execute(query)
+            res=self.cur.fetchall()
+
+            if res==None:
+                print('No students are admitted at this moment..')
+            else:
+                students=PrettyTable(['Roll no','Name','Course','Email','Academic Year'])    
+                for student in res:
+                    students.add_row([student[0],student[1],student[2],student[3],student[4]])
+                print(students) 
+                print()   
+
+        except Exception as e:
+            print(e)
+        finally:
+            self.cur.execute("commit;")
+            self.mydb.close()     
+
+    def delstudent(self,studentToDelete):    
+        try:
+            self.connection()
+
+            data=(studentToDelete,)
+            query='''select * from student where rollno=%s'''
+            self.cur.execute(query,data)
+            res=self.cur.fetchone()
+            if res==None:
+                return 'This Roll no doesn\'t Exist'
+
+            else:
+                query='''delete from student where rollno=%s;'''
+                self.cur.execute(query,data)
+                return True
         
+        except Exception as e:
+            return e
+            
+        finally: 
+            self.cur.execute("commit;")
+            self.mydb.close()        
+
 
 
 
@@ -285,7 +336,7 @@ class Student:
                 
                 
             else:
-                return f'Name:{res[1]}\nCourse:{res[2]}\nEmail:{res[3]}\nPecentage:{res[4]}\nLast college name:{res[5]}\nApplication_status:{res[6]}\n'
+                return f'\nName:{res[1]}\nCourse:{res[2]}\nEmail:{res[3]}\nPecentage:{res[4]}\nLast college name:{res[5]}\nApplication_status:{res[6]}\n'
   
 
         except Exception as e:
@@ -378,6 +429,16 @@ while True:
                 elif Adch == 2:
                     print(' Remove Student Section'.center(star,"*"))
 
+                    app.listStudent()
+                    studentToDelete=int(input("Enter Roll no of student,You want to remove."))
+                    DeleteStatus=app.delstudent(studentToDelete)
+                    if DeleteStatus==True:
+                        print(' student Removed Successfully '.center(star,"*"))
+                    else:
+                        print(f' {DeleteStatus} '.center(star,"*"))    
+
+
+
                     
                     
 
@@ -386,6 +447,7 @@ while True:
 
                 elif Adch == 3:
                     print(' List Student Section'.center(star,"*"))
+                    app.listStudent()
 
                     
 
@@ -393,6 +455,7 @@ while True:
 
                 elif Adch == 4:
                     print(' View Pending Applications Section'.center(star,"*"))
+                    app.showPendingApplication()
 
                     
 
@@ -525,9 +588,6 @@ while True:
             else:
                 print(' Invalid Choice '.center(star,"*"))
 
-
-
-        
         
     #Choice @3-Exit
     elif ch == 3:
