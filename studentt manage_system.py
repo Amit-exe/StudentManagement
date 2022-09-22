@@ -207,7 +207,7 @@ class Student:
 
     def validateUsername(self,name):
         name_length = len(name)
-        x = re.findall('[A-Za-z]+',name)
+        x = re.findall('[A-Za-z\s]+',name)
         
         if len(x[0]) == name_length:
             return True 
